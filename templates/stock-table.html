@@ -1,0 +1,103 @@
+<div class="animate-fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-dark m-0">Stok Bahan Ajar</h3>
+        <button class="btn-black" @click="bukaModalTambah" aria-label="Tambah Bahan Ajar">
+            <i class="fas fa-plus me-2"></i> Tambah Bahan Ajar
+        </button>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon icon-blue"><i class="fas fa-book"></i></div>
+                <div class="stat-info"><h6>Total Judul MK</h6><h3>{{ items.length }}</h3></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon icon-red"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-info"><h6>Perlu Restock</h6><h3 class="text-danger">{{ totalRestock }} Item</h3></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-box">
+        <div class="row align-items-end g-4">
+            <div class="col-md-5">
+                <label class="filter-label">UT-DAERAH</label>
+                <select v-model="filter.upbjj" class="form-select form-select-custom" aria-label="Filter Daerah">
+                    <option value="">Semua UPBJJ</option>
+                    <option v-for="u in upbjjList" :value="u">{{ u }}</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="filter-label">FILTER STATUS</label>
+                <div class="d-flex flex-column gap-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" v-model="filter.lowStock" id="chkLow" aria-label="Stok Menipis">
+                        <label class="form-check-label small fw-bold text-secondary" for="chkLow">Stok Menipis</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" v-model="filter.emptyStock" id="chkEmpty" aria-label="Stok Kosong">
+                        <label class="form-check-label small fw-bold text-secondary" for="chkEmpty">Stok Kosong</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="filter-label">URUTKAN</label>
+                <select v-model="sortBy" class="form-select form-select-custom" aria-label="Urutkan">
+                    <option value="default">Tidak ada urutan</option>
+                    <option value="judul">Nama MK (A-Z)</option>
+                    <option value="stok">Stok (Terendah)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="table table-custom mb-0">
+            <thead>
+                <tr>
+                    <th>Kode</th><th>Nama MK</th><th>Kategori</th><th>UPBJJ</th><th>Rak</th><th>Harga</th><th>Stok</th><th>Status</th><th>Catatan</th><th class="text-end">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="item in filteredStok" :key="item.kode">
+                    <td class="text-secondary">{{ item.kode }}</td>
+                    <td class="fw-bold text-dark">{{ item.judul }}</td>
+                    <td>{{ item.kategori }}</td>
+                    <td>{{ item.upbjj }}</td>
+                    <td>{{ item.lokasiRak }}</td>
+                    <td>{{ formatRupiah(item.harga) }}</td>
+                    <td>{{ item.qty }}</td>
+                    <td><status-badge type="stok" :qty="item.qty" :safety="item.safety"></status-badge></td>
+                    <td class="small text-muted fst-italic" v-html="item.catatanHTML"></td>
+                    <td class="text-end">
+                        <button class="btn-circle" @click="bukaModalEdit(item)" title="Edit" aria-label="Edit"><i class="fas fa-pen"></i></button>
+                        <button class="btn-circle delete" @click="hapusData(item)" title="Hapus" aria-label="Hapus"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <app-modal id="modalStokForm" :title="isEditMode ? 'Edit Data' : 'Tambah Data'">
+        <form @submit.prevent="simpanData">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="small fw-bold">Kode</label><input v-model="form.kode" class="form-control" required aria-label="Kode"></div>
+                <div class="col-md-6"><label class="small fw-bold">Nama MK</label><input v-model="form.judul" class="form-control" required aria-label="Nama MK"></div>
+                <div class="col-md-6"><label class="small fw-bold">Kategori</label><select v-model="form.kategori" class="form-select" required aria-label="Kategori"><option v-for="k in kategoriList" :value="k">{{k}}</option></select></div>
+                <div class="col-md-6"><label class="small fw-bold">UPBJJ</label><select v-model="form.upbjj" class="form-select" required aria-label="UPBJJ"><option v-for="u in upbjjList" :value="u">{{u}}</option></select></div>
+                <div class="col-md-4"><label class="small fw-bold">Rak</label><input v-model="form.lokasiRak" class="form-control" aria-label="Rak"></div>
+                <div class="col-md-4"><label class="small fw-bold">Harga</label><input type="number" v-model.number="form.harga" class="form-control" aria-label="Harga"></div>
+                <div class="col-md-4"><label class="small fw-bold">Stok</label><input type="number" v-model.number="form.qty" class="form-control" aria-label="Stok"></div>
+                <div class="col-12"><label class="small fw-bold">Safety Stock</label><input type="number" v-model.number="form.safety" class="form-control" aria-label="Safety"></div>
+                <div class="col-12"><label class="small fw-bold">Catatan</label><input v-model="form.catatanHTML" class="form-control" aria-label="Catatan"></div>
+            </div>
+            <div class="mt-4 text-end">
+                <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-black">Simpan</button>
+            </div>
+        </form>
+    </app-modal>
+</div>

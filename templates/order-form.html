@@ -1,0 +1,28 @@
+<div class="card p-4 shadow-sm border-0">
+    <h4 class="mb-4">Form Pemesanan Cepat</h4>
+    <form @submit.prevent="prosesOrder">
+        <div class="mb-3">
+            <label class="form-label">Pilih Paket Bahan Ajar</label>
+            <select v-model="order.paket" class="form-select" required aria-label="Pilih Paket Bahan Ajar">
+                <option value="" disabled>-- Pilih Paket --</option>
+                <option v-for="p in paketList" :value="p.nama">{{ p.nama }} - {{ p.harga }}</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Pilih Ekspedisi</label>
+            <select v-model="order.ekspedisi" class="form-select" required aria-label="Pilih Jasa Ekspedisi">
+                <option value="" disabled>-- Pilih Ekspedisi --</option>
+                <option v-for="e in pengirimanList" :value="e.nama">{{ e.nama }}</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Nama Lengkap</label>
+            <input v-model="order.nama" type="text" class="form-control" required aria-label="Nama Lengkap Pemesan">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Alamat Pengiriman</label>
+            <textarea v-model="order.alamat" class="form-control" rows="3" required aria-label="Alamat Lengkap"></textarea>
+        </div>
+        <button type="submit" class="btn btn-black w-100">Kirim Pesanan</button>
+    </form>
+</div>
